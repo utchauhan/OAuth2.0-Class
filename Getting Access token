@@ -1,0 +1,26 @@
+public class 3rdutil {
+    public static String 3rdAppQuerry(){
+        String query = SOQLUtil.buildSOQLQuery('object__c',Param_name,Parameter);
+        return query;
+    }
+
+    public PageReference accesstoken(){
+        String query = 3rdAppQuerry();
+        List<object__c> result = Database.query(query);
+        object__c newobj = new object__c;
+        if(result != null && !result.isEmpty()){
+            newobj = result.get(0);
+        }
+        else {return null;}
+        
+        String code = Apexpages.currentPage().getParameter().get('code');
+        String realmID = Apexpages.currentPage().getParameter().get('code');
+        String baseurl = System.URL.getSalesforceBaseUrl().toExternalForm()+'/apex/'+newobj.pagename__c;
+        String requestbody = 'grant_type=authorization_code&code='+code+'&redirect_uri'+baseurl;
+
+        String endpoint = newobj.tokenurl__c;
+        String basic = newobj.ClientId__c+newobj.Clientsecret__c;
+        String encodedString = 'Basic '+EncodingUtil.base64Encode(blob.Valueof(basic));
+        
+    }
+}
