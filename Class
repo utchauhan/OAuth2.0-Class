@@ -170,7 +170,30 @@ public class 3rdutil {
         String finalendpoint = endpoint+customurl//plus any other parameters
         
         string errorMessage = '';
+        String requestbody = ''; 
+        // or after populating dezired values for xyz instance of API_response_body_class
+        // xyz.fieldvalues = blah blah; 
+        // perform String requestbody = System.JSON.serealize(xyz)
+        Http http = new Http();
+        HttpRequest req = PrepareRequest.prepareRequest(finalendpoint,accesstoken,'POST',requestbody);
+        HTTPResponse response = new HTTPResponse();
+        try
+        {
+            response = http.send(req);
+            if(response.getStatusCode() == 200|| response.getStatusCode() == 201)
+            {
+                System.debug();
+                system.debug(System.LoggingLevel.DEBUG, 'Body '+response.getBody());
 
+                API_response_body_class responseWrapper = API_response_body_class.parse(response.getBody());
+// use List<API_response_body_class> responses = (List<API_response_body_class>)System.JSON.deserialize(response.getBody(),List<API_response_body_class>.class);
+// when dealing with multiple responses
+
+            }
+            else{
+                errorMessage = 'Unexpected Error while communicating with API. '+ 'Status '+ response.getStatus() +'and Status Code'+response.getStatusCode(); 
+            }
+        }
     }
 }
 
@@ -185,6 +208,21 @@ public class JSONWrapper
     public static JSONWrapper parse(String body) 
     {
         return (JSONWrapper)System.JSON.deserialize(body, JSONWrapper.class);
+    }
+}
+
+global without sharing class PrepareRequest{
+    public static HttpRequest prepareRequest(String endpoint, String accessToken, String method, String requestBody){
+        HttpRequest req = new HttpRequest();
+        req.setMethod(method);
+        req.setEndpoint(endpoint);
+        req.setHeader('Content-Type', 'application/json');
+        req.setHeader('Accept', 'application/json');
+        req.setHeader('Authorization', 'Bearer '+accessToken);
+        if(!String.isblank(requestBody)){
+            req.setBody(requestBody);
+        }
+        return req;
     }
 }
 
