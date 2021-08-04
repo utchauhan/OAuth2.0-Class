@@ -4,6 +4,18 @@ public class 3rdutil {
         //SOQLUtil class code in SOQL util repo
         return query;
     }
+    public static object__c getmetadataconfig(){
+        String query = SOQLUtil.buildSOQLQuery('object__c',filter_name,filter);
+        list<object__c> credlist = Database.query(query);
+        object__c newobj = new object__c();
+        if(credlist != null && !credlist.isEmpty()){
+            newobj = credlist.get(0);
+        }
+        else{
+            return null;
+        }
+        return newobj;        
+    }
 
     public static PageReference doAuthorizationQuickBooks(){
 
@@ -18,14 +30,9 @@ public class 3rdutil {
         return pageRef;
     }
 
-    public PageReference accesstoken(){
-        String query = 3rdAppQuerry();
-        List<object__c> result = Database.query(query);
-        object__c newobj = new object__c;
-        if(result != null && !result.isEmpty()){
-            newobj = result.get(0);
-        }
-        else {
+    public static void accesstoken(){
+        object__c result = getmetadataconfig();
+        if(result = null ){
             return null;
         }
         
@@ -153,27 +160,30 @@ public class 3rdutil {
         return isvalid;
     }
 
-    public static void api_operation(apiresponsebodyclass xyz){
-        object__c newobj = creds();
+    public static void api_operation(API_response_body_class xyz){
+        object__c newobj = getmetadataconfig();
+        
         String accesstoken = newobj.access_token__c;
         Boolean isvalid = check_token_validity(newobj);
+        
         Map<string, object> refresh_token_Map = new Map<string, object>();
         if(!isvalid){
             refresh_token_Map = refreshToken(newobj);
             accesstoken = (string)refresh_token_Map.get('access_token__c');
         }
+        
         String endpoint = newobj.environment == 'Sandbox'? newobj.sandbox_baseUrl__c :  newobj.production_baseUrl__c;
         
-        String customurl = ''; //based on the api requirement 
-        customurl = customurl.replace('{realmid}',newobj.realmid__c);
+        String custom_url = ''; //based on the api requirement 
+        custom_url = custom_url.replace('{realmid}',newobj.realmid__c);
         
-        String finalendpoint = endpoint+customurl//plus any other parameters
+        String finalendpoint = endpoint+custom_url//plus any other parameters
         
         string errorMessage = '';
         String requestbody = ''; 
-        // or after populating dezired values for xyz instance of API_response_body_class
-        // xyz.fieldvalues = blah blah; 
-        // perform String requestbody = System.JSON.serealize(xyz)
+        /* or after populating dezired values for xyz instance of API_response_body_class
+        xyz.fieldvalues = blah blah; 
+        perform String requestbody = System.JSON.serealize(xyz)*/
         Http http = new Http();
         HttpRequest req = PrepareRequest.prepareRequest(finalendpoint,accesstoken,'POST',requestbody);
         HTTPResponse response = new HTTPResponse();
@@ -186,14 +196,14 @@ public class 3rdutil {
                 system.debug(System.LoggingLevel.DEBUG, 'Body '+response.getBody());
 
                 API_response_body_class responseWrapper = API_response_body_class.parse(response.getBody());
-// use List<API_response_body_class> responses = (List<API_response_body_class>)System.JSON.deserialize(response.getBody(),List<API_response_body_class>.class);
-// when dealing with multiple responses
-
+                // use List<API_response_body_class> responses = (List<API_response_body_class>)System.JSON.deserialize(response.getBody(),List<API_response_body_class>.class);
+                // when dealing with multiple responses
             }
             else{
                 errorMessage = 'Unexpected Error while communicating with API. '+ 'Status '+ response.getStatus() +'and Status Code'+response.getStatusCode(); 
             }
         }
+
     }
 }
 
@@ -225,8 +235,3 @@ global without sharing class PrepareRequest{
         return req;
     }
 }
-
-
-
-
-
